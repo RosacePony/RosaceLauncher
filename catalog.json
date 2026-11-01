@@ -1,0 +1,14 @@
+{
+  "titles": [
+    {
+      "id": "ponyside",
+      "name": "PonySide",
+      "description": "A multiplayer pony adventure.",
+      "repo": "RosacePony/PonySide2025",
+      "platforms": {
+        "windows": { "asset": "(?i)windows.*\\.zip$", "executable": "PonySide.exe" },
+        "linux":   { "asset": "(?i)linux.*\\.(zip|tar\\.gz)$", "executable": "PonySide.x86_64" }
+      }
+    }
+  ]
+}

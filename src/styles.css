@@ -1,0 +1,36 @@
+:root {
+  --bg: #15121c; --panel: #1e1928; --panel2: #2a2238; --text: #ece6f5; --muted: #9b90ad;
+  --accent: #d46ab0; --accent2: #8f6ad4; --ok: #5cc98a; --err: #ef6b6b;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; height: 100vh; display: flex; background: var(--bg); color: var(--text);
+  font: 14px/1.5 "Segoe UI", system-ui, sans-serif; user-select: none; }
+aside { width: 260px; background: var(--panel); display: flex; flex-direction: column; padding: 16px 10px; }
+.brand { font-size: 18px; font-weight: 600; padding: 4px 10px 16px; }
+.logo { color: var(--accent); }
+nav { flex: 1; overflow-y: auto; }
+.item { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 10px 12px;
+  border: 0; border-radius: 8px; background: none; color: var(--text); text-align: left; cursor: pointer; font: inherit; }
+.item:hover { background: var(--panel2); }
+.item.active { background: var(--panel2); box-shadow: inset 3px 0 var(--accent); }
+.badge { font-size: 11px; padding: 1px 7px; border-radius: 99px; background: var(--panel); color: var(--muted); }
+.badge.update { background: var(--accent); color: #fff; }
+.badge.installed { color: var(--ok); }
+main { flex: 1; overflow-y: auto; }
+.hero { height: 260px; background: linear-gradient(135deg, var(--accent2), var(--accent)) center/cover; display: flex; align-items: flex-end; padding: 28px 36px; }
+.hero h1 { margin: 0; font-size: 40px; text-shadow: 0 2px 12px #0008; }
+.body { padding: 24px 36px; max-width: 900px; }
+.actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
+button.primary, button.secondary, button.ghost { border: 0; border-radius: 8px; padding: 10px 22px; font: inherit; font-weight: 600; cursor: pointer; }
+button.primary { background: var(--accent); color: #fff; font-size: 16px; padding: 12px 40px; }
+button.primary:hover { filter: brightness(1.1); }
+button.secondary { background: var(--panel2); color: var(--text); }
+button.ghost { background: none; color: var(--muted); }
+button:disabled { opacity: .5; cursor: default; }
+.meta { color: var(--muted); }
+.error { color: var(--err); }
+.muted { color: var(--muted); padding: 24px; }
+.progress { height: 8px; background: var(--panel2); border-radius: 99px; overflow: hidden; margin: 8px 0 4px; }
+.progress > div { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width .15s; }
+.notes { white-space: pre-wrap; background: var(--panel); padding: 14px 18px; border-radius: 8px; user-select: text; }
