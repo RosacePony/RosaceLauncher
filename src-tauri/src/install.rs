@@ -4,6 +4,7 @@ use crate::catalog::Title;
 use crate::state::Installed;
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
@@ -23,6 +24,9 @@ struct GhAsset {
     name: String,
     browser_download_url: String,
     size: u64,
+    /// "sha256:<hex>", computed by GitHub when the file was uploaded.
+    #[serde(default)]
+    digest: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -34,6 +38,19 @@ pub struct ReleaseInfo {
     pub asset_name: String,
     pub size: u64,
     pub download_url: String,
+    /// Expected SHA-256 of the file (lowercase hex), from GitHub.
+    pub sha256: Option<String>,
+}
+
+/// The lowercase hex SHA-256 in a GitHub asset digest ("sha256:<64 hex>").
+pub fn parse_digest(digest: Option<&str>) -> Option<String> {
+    let hex = digest?.strip_prefix("sha256:")?.to_ascii_lowercase();
+    (hex.len() == 64 && hex.chars().all(|c| c.is_ascii_hexdigit())).then_some(hex)
+}
+
+/// Lowercase hex of a SHA-256 hash.
+pub fn hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -84,6 +101,7 @@ pub async fn latest_release(client: &reqwest::Client, title: &Title) -> Result<R
         asset_name: asset.name.clone(),
         size: asset.size,
         download_url: asset.browser_download_url.clone(),
+        sha256: parse_digest(asset.digest.as_deref()),
     })
 }
 
@@ -115,12 +133,14 @@ pub async fn install(
     let mut file = tokio::fs::File::create(&part).await.map_err(|e| e.to_string())?;
     let mut stream = resp.bytes_stream();
     let mut downloaded = 0u64;
+    let mut hasher = Sha256::new();
     let mut last = Instant::now();
     let progress = |stage, downloaded| Progress { id: title.id.clone(), stage, downloaded, total };
     on_progress(progress("download", 0));
     while let Some(chunk) = stream.next().await {
         let chunk = chunk.map_err(|e| format!("Download interrupted: {e}"))?;
         file.write_all(&chunk).await.map_err(|e| e.to_string())?;
+        hasher.update(&chunk);
         downloaded += chunk.len() as u64;
         if last.elapsed() > Duration::from_millis(120) {
             on_progress(progress("download", downloaded));
@@ -129,6 +149,16 @@ pub async fn install(
     }
     file.flush().await.map_err(|e| e.to_string())?;
     drop(file);
+    // Integrity: the file must match the SHA-256 GitHub recorded at upload time.
+    let got = hex(&hasher.finalize());
+    match &info.sha256 {
+        Some(want) if *want != got => {
+            let _ = fs::remove_file(&part);
+            return Err(format!("Download corrupted or tampered with (SHA-256 mismatch: expected {want}, got {got}). Nothing was installed."));
+        }
+        Some(_) => {}
+        None => eprintln!("{}: GitHub gave no checksum for {}; installed without verification", title.id, info.asset_name),
+    }
     on_progress(progress("extract", downloaded));
 
     // Extract off the async runtime.
@@ -234,6 +264,17 @@ fn flatten_single_dir(dest: &Path) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn digests_parse_and_hash_matches() {
+        let h = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+        assert_eq!(parse_digest(Some(&format!("sha256:{}", h.to_uppercase()))).as_deref(), Some(h));
+        assert_eq!(parse_digest(Some("md5:abc")), None);
+        assert_eq!(parse_digest(Some("sha256:xyz")), None);
+        assert_eq!(parse_digest(None), None);
+        // SHA-256 of nothing.
+        assert_eq!(hex(&Sha256::new().finalize()), h);
+    }
 
     /// Real network test: installs ripgrep's Windows/Linux release (archive with a top folder).
     /// Run with: cargo test -- --ignored

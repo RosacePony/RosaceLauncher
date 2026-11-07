@@ -1,6 +1,6 @@
 [package]
 name = "rosace-launcher"
-version = "0.3.0"
+version = "0.4.0"
 description = "Rosace Launcher"
 edition = "2021"
 
@@ -22,3 +22,5 @@ zip = { version = "2", default-features = false, features = ["deflate"] }
 flate2 = "1"
 tar = "0.4"
 regex = "1"
+sha2 = "0.10"
+tauri-plugin-updater = "2"

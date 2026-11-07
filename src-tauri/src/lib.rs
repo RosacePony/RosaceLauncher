@@ -173,10 +173,36 @@ fn migrate_old_data_dir() {
     }
 }
 
+/// A newer launcher on GitHub (signed with the release key), or None.
+#[derive(Serialize)]
+struct LauncherUpdate {
+    version: String,
+    notes: Option<String>,
+}
+
+#[tauri::command]
+async fn check_launcher_update(app: AppHandle) -> Result<Option<LauncherUpdate>, String> {
+    use tauri_plugin_updater::UpdaterExt;
+    let update = app.updater().map_err(|e| e.to_string())?.check().await.map_err(|e| e.to_string())?;
+    Ok(update.map(|u| LauncherUpdate { version: u.version, notes: u.body }))
+}
+
+/// Downloads the new launcher, verifies its signature, runs its installer and restarts.
+#[tauri::command]
+async fn install_launcher_update(app: AppHandle) -> Result<(), String> {
+    use tauri_plugin_updater::UpdaterExt;
+    let Some(update) = app.updater().map_err(|e| e.to_string())?.check().await.map_err(|e| e.to_string())? else {
+        return Ok(());
+    };
+    update.download_and_install(|_, _| {}, || {}).await.map_err(|e| format!("Launcher update failed: {e}"))?;
+    app.restart();
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     migrate_old_data_dir();
     tauri::Builder::default()
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             // Local (not roaming) app data: %LOCALAPPDATA%\com.rosace.launcher or ~/.local/share/...
             let data_dir = app.path().app_local_data_dir()?;
@@ -196,7 +222,9 @@ pub fn run() {
             uninstall_title,
             launch_title,
             open_install_folder,
-            open_link
+            open_link,
+            check_launcher_update,
+            install_launcher_update
         ])
         .run(tauri::generate_context!())
         .expect("error while running Rosace Launcher");

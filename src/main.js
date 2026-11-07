@@ -130,3 +130,22 @@ $("auto-update").onchange = (e) => localStorage.setItem("autoUpdate", e.target.c
 // Check for new releases every 30 minutes while the launcher stays open.
 setInterval(() => { if (!Object.keys(state.progress).length) load(); }, 30 * 60 * 1000);
 load();
+
+// The launcher updates itself too: signed releases from GitHub (checked at start and every 30 min).
+async function checkLauncherUpdate() {
+  try {
+    const u = await invoke("check_launcher_update");
+    const bar = $("launcher-update");
+    if (!u) { bar.hidden = true; return; }
+    bar.innerHTML = `<span>Rosace Launcher <b>${esc(u.version)}</b> is available.</span><button class="primary small" id="launcher-update-go">Update &amp; restart</button>`;
+    bar.hidden = false;
+    $("launcher-update-go").onclick = async (e) => {
+      e.target.disabled = true;
+      e.target.textContent = "Updating…";
+      try { await invoke("install_launcher_update"); }
+      catch (err) { bar.innerHTML = `<span class="error">${esc(err)}</span>`; }
+    };
+  } catch (_) { /* offline or no release yet */ }
+}
+checkLauncherUpdate();
+setInterval(checkLauncherUpdate, 30 * 60 * 1000);

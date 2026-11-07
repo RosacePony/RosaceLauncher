@@ -47,6 +47,27 @@ catalog change reaches every installed launcher; new cover images need a launche
 (or an https URL). For testing, the env var `ROSACE_CATALOG`
 (URL or file path) overrides everything.
 
+## Security
+
+- Games: downloads use HTTPS, and every file must match the SHA-256 that GitHub recorded at
+  upload (release asset `digest`); a mismatch aborts before anything is installed. Archives
+  can't write outside the game folder (zip-slip / tar escape checks).
+- The launcher updates itself from this repo's releases (`latest.json`). Updates are signed:
+  each launcher carries the public key and refuses an installer whose signature doesn't
+  match. The private key lives in `~/.tauri/rosace-launcher.key` on the release PC, never in
+  git. **Back it up**: without it, installed launchers can't receive updates anymore.
+- Everything installs per user (no admin). The page can only open the Ko-fi page or a store
+  link from the catalog.
+- Protect the GitHub account with two-factor authentication: the catalog and releases come
+  from it.
+
+## Releasing the launcher
+```
+python tools/release.py --version 0.4.1 --notes "What changed"
+```
+Bumps the version, runs the tests, builds the signed installer, writes `latest.json`, tags,
+pushes and creates the GitHub release. Installed launchers show **Update & restart**.
+
 ## Where things go
 - Windows: `%LOCALAPPDATA%\com.rosace.launcher\games\<id>`
 - Linux: `~/.local/share/com.rosace.launcher/games/<id>`
