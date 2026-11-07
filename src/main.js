@@ -2,6 +2,8 @@ const { invoke } = window.__TAURI__.core;
 const { listen } = window.__TAURI__.event;
 
 const state = { titles: [], releases: {}, progress: {}, errors: {}, selected: null };
+// Installed titles update themselves when a newer GitHub release is found (setting kept per PC).
+const autoUpdate = () => localStorage.getItem("autoUpdate") !== "off";
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const mb = (n) => (n / 1048576).toFixed(1) + " MB";
@@ -68,6 +70,12 @@ async function act(t, action) {
       render();
       t.installed = await invoke("install_title", { id: t.id });
     } else if (action === "launch") {
+      // Never start an outdated build: update first, then play.
+      if (status(t) === "update") {
+        state.progress[t.id] = { stage: "download", downloaded: 0, total: state.releases[t.id]?.size || 0 };
+        render();
+        t.installed = await invoke("install_title", { id: t.id });
+      }
       await invoke("launch_title", { id: t.id });
     } else if (action === "folder") {
       await invoke("open_install_folder", { id: t.id });
@@ -99,6 +107,9 @@ async function load() {
     catch (e) { state.releases[t.id] = { error: String(e) }; }
     render();
   }));
+  if (autoUpdate()) {
+    for (const t of state.titles.filter((x) => status(x) === "update")) await act(t, "install");
+  }
 }
 
 listen("install-progress", (ev) => {
@@ -108,4 +119,8 @@ listen("install-progress", (ev) => {
   renderList();
 });
 $("refresh").onclick = load;
+$("auto-update").checked = autoUpdate();
+$("auto-update").onchange = (e) => localStorage.setItem("autoUpdate", e.target.checked ? "on" : "off");
+// Check for new releases every 30 minutes while the launcher stays open.
+setInterval(() => { if (!Object.keys(state.progress).length) load(); }, 30 * 60 * 1000);
 load();

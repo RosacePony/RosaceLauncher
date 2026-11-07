@@ -1,13 +1,31 @@
 {
   "titles": [
     {
+      "id": "claws-and-magic",
+      "name": "Claws & Magic",
+      "description": "Third-person anthro fantasy melee: swords, bows and magic. Training, Horde co-op and online duels.",
+      "repo": "RosacePony/ClawsAndMagic",
+      "platforms": {
+        "windows": {
+          "asset": "(?i)windows.*\\.zip$",
+          "executable": "claws_and_magic.exe"
+        }
+      }
+    },
+    {
       "id": "ponyside",
       "name": "PonySide",
       "description": "A multiplayer pony adventure.",
       "repo": "RosacePony/PonySide2025",
       "platforms": {
-        "windows": { "asset": "(?i)windows.*\\.zip$", "executable": "PonySide.exe" },
-        "linux":   { "asset": "(?i)linux.*\\.(zip|tar\\.gz)$", "executable": "PonySide.x86_64" }
+        "windows": {
+          "asset": "(?i)windows.*\\.zip$",
+          "executable": "PonySide.exe"
+        },
+        "linux": {
+          "asset": "(?i)linux.*\\.(zip|tar\\.gz)$",
+          "executable": "PonySide.x86_64"
+        }
       }
     }
   ]

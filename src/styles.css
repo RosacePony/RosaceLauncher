@@ -34,3 +34,5 @@ button:disabled { opacity: .5; cursor: default; }
 .progress { height: 8px; background: var(--panel2); border-radius: 99px; overflow: hidden; margin: 8px 0 4px; }
 .progress > div { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width .15s; }
 .notes { white-space: pre-wrap; background: var(--panel); padding: 14px 18px; border-radius: 8px; user-select: text; }
+
+.setting { display: flex; align-items: center; gap: 6px; margin: 8px 12px; font-size: 13px; opacity: 0.8; cursor: pointer; }

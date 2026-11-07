@@ -261,4 +261,27 @@ mod tests {
         println!("installed {}", installed.version);
         let _ = fs::remove_dir_all(&dir);
     }
+
+    /// Real network test: installs Claws & Magic from the bundled catalog (latest GitHub release,
+    /// ~230 MB) and checks the installed game answers `--version`.
+    /// Run with: cargo test installs_claws -- --ignored --nocapture
+    #[tokio::test]
+    #[ignore]
+    async fn installs_claws_and_magic_from_catalog() {
+        let catalog = crate::catalog::parse(include_str!("../../catalog.json")).unwrap();
+        let title = catalog.titles.iter().find(|t| t.id == "claws-and-magic").expect("catalog entry");
+        let dir = std::env::temp_dir().join("rosace-launcher-test-cm");
+        let _ = fs::remove_dir_all(&dir);
+        let installed = install(&client(), &dir, title, &|_| {}).await.unwrap();
+        let game = dir.join("games/claws-and-magic");
+        let exe = game.join(&title.build().unwrap().executable);
+        assert!(exe.is_file(), "missing {exe:?}");
+        assert!(game.join("assets/characters").is_dir(), "assets not installed next to the exe");
+        let out = std::process::Command::new(&exe).arg("--version").current_dir(&game).output().unwrap();
+        let v = String::from_utf8_lossy(&out.stdout);
+        assert!(v.contains("Claws & Magic"), "{v}");
+        assert!(installed.version.trim_start_matches('v') == v.trim().rsplit(' ').next().unwrap(), "{} vs {v}", installed.version);
+        println!("installed {} -> {}", installed.version, v.trim());
+        let _ = fs::remove_dir_all(&dir);
+    }
 }
