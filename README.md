@@ -1,13 +1,13 @@
-# Rosace's Logic Launcher
+# Rosace Launcher
 
-Desktop launcher (Windows + Linux) for Rosace's Logic games and apps.
+Desktop launcher (Windows + Linux) for Rosace's games and apps.
 Rust + Tauri v2 backend, plain HTML/JS UI. Installs, updates, launches and uninstalls
 titles from their **GitHub Releases**, and links to store pages (Steam) for the others.
 
 ## Download
 
-Get **`Rosaces.Logic_x.y.z_x64-setup.exe`** from the
-[latest release](https://github.com/RosacePony/RosacesLogicLauncher/releases/latest) and run it.
+Get **`Rosace.Launcher_x.y.z_x64-setup.exe`** from the
+[latest release](https://github.com/RosacePony/RosaceLauncher/releases/latest) and run it.
 Installed games update themselves (on start, every 30 minutes and before Play).
 
 Like my games? [Fund my projects on Ko-fi](https://ko-fi.com/rosacepony).
@@ -48,8 +48,8 @@ catalog change reaches every installed launcher; new cover images need a launche
 (URL or file path) overrides everything.
 
 ## Where things go
-- Windows: `%LOCALAPPDATA%\com.rosaceslogic.launcher\games\<id>`
-- Linux: `~/.local/share/com.rosaceslogic.launcher/games/<id>`
+- Windows: `%LOCALAPPDATA%\com.rosace.launcher\games\<id>`
+- Linux: `~/.local/share/com.rosace.launcher/games/<id>`
 - `installed.json` next to `games/` records installed versions.
 
 ## Develop / build

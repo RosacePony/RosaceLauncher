@@ -150,11 +150,35 @@ async fn open_link(launcher: State<'_, Launcher>, url: String) -> Result<(), Str
     std::process::Command::new(opener).arg(&url).spawn().map(|_| ()).map_err(|e| e.to_string())
 }
 
+/// The launcher used to be "Rosace's Logic" (data in `com.rosaceslogic.launcher`): move the
+/// installed games, versions and settings over once so nothing is downloaded again.
+/// Runs before Tauri starts (the webview creates its profile inside the data folder).
+fn migrate_old_data_dir() {
+    let base = if cfg!(windows) {
+        std::env::var_os("LOCALAPPDATA").map(PathBuf::from)
+    } else {
+        std::env::var_os("XDG_DATA_HOME").map(PathBuf::from).or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".local/share")))
+    };
+    let Some(parent) = base else { return };
+    let data_dir = &parent.join("com.rosace.launcher");
+    let old = parent.join("com.rosaceslogic.launcher");
+    if old.is_dir() && !data_dir.join("installed.json").exists() {
+        if data_dir.exists() {
+            // Only a fresh profile (no installed games) can be here.
+            let _ = std::fs::remove_dir_all(data_dir);
+        }
+        if let Err(e) = std::fs::rename(&old, data_dir) {
+            eprintln!("could not migrate {}: {e}", old.display());
+        }
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    migrate_old_data_dir();
     tauri::Builder::default()
         .setup(|app| {
-            // Local (not roaming) app data: %LOCALAPPDATA%\com.rosaceslogic.launcher or ~/.local/share/...
+            // Local (not roaming) app data: %LOCALAPPDATA%\com.rosace.launcher or ~/.local/share/...
             let data_dir = app.path().app_local_data_dir()?;
             std::fs::create_dir_all(&data_dir)?;
             app.manage(Launcher {
@@ -175,5 +199,5 @@ pub fn run() {
             open_link
         ])
         .run(tauri::generate_context!())
-        .expect("error while running Rosace's Logic launcher");
+        .expect("error while running Rosace Launcher");
 }

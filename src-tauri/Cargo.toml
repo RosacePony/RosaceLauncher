@@ -1,11 +1,11 @@
 [package]
-name = "rosaces-logic-launcher"
-version = "0.2.0"
-description = "Rosace's Logic launcher"
+name = "rosace-launcher"
+version = "0.3.0"
+description = "Rosace Launcher"
 edition = "2021"
 
 [lib]
-name = "rosaces_logic_launcher_lib"
+name = "rosace_launcher_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

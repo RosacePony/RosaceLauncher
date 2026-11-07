@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    rosaces_logic_launcher_lib::run()
+    rosace_launcher_lib::run()
 }

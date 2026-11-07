@@ -46,7 +46,7 @@ pub struct Progress {
 
 pub fn client() -> reqwest::Client {
     reqwest::Client::builder()
-        .user_agent(concat!("RosacesLogicLauncher/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("RosaceLauncher/", env!("CARGO_PKG_VERSION")))
         .connect_timeout(Duration::from_secs(15))
         .build()
         .expect("http client")

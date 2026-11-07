@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 /// Set this to a raw GitHub URL (e.g. a `catalog.json` in a public repo) to add titles
 /// without shipping a new launcher. `None` = use the catalog bundled at build time.
-pub const REMOTE_CATALOG_URL: Option<&str> = Some("https://raw.githubusercontent.com/RosacePony/RosacesLogicLauncher/main/catalog.json");
+pub const REMOTE_CATALOG_URL: Option<&str> = Some("https://raw.githubusercontent.com/RosacePony/RosaceLauncher/main/catalog.json");
 
 const BUNDLED: &str = include_str!("../../catalog.json");
 
