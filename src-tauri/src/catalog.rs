@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 /// Set this to a raw GitHub URL (e.g. a `catalog.json` in a public repo) to add titles
 /// without shipping a new launcher. `None` = use the catalog bundled at build time.
-pub const REMOTE_CATALOG_URL: Option<&str> = None;
+pub const REMOTE_CATALOG_URL: Option<&str> = Some("https://raw.githubusercontent.com/RosacePony/RosacesLogicLauncher/main/catalog.json");
 
 const BUNDLED: &str = include_str!("../../catalog.json");
 
@@ -29,10 +29,16 @@ pub struct Title {
     pub name: String,
     #[serde(default)]
     pub description: String,
-    /// GitHub "owner/repo" whose latest release is installed.
+    /// GitHub "owner/repo" whose latest release is installed (empty for store titles).
+    #[serde(default)]
     pub repo: String,
+    /// Banner image: a path inside the launcher (`covers/x.jpg`) or an https URL.
     #[serde(default)]
     pub cover: Option<String>,
+    /// Store page (e.g. Steam): the launcher links there instead of installing.
+    #[serde(default)]
+    pub store_url: Option<String>,
+    #[serde(default)]
     pub platforms: HashMap<String, PlatformBuild>,
 }
 
@@ -59,6 +65,12 @@ pub fn parse(text: &str) -> Result<Catalog, String> {
             && t.id.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-' || c == '_');
         if !ok {
             return Err(format!("Invalid title id '{}': use a-z, 0-9, '-' or '_'", t.id));
+        }
+        if let Some(url) = &t.store_url {
+            if !url.starts_with("https://") {
+                return Err(format!("Store link of '{}' must be an https URL", t.id));
+            }
+            continue;
         }
         if t.repo.split('/').count() != 2 {
             return Err(format!("Invalid repo '{}' for '{}': expected owner/name", t.repo, t.id));
@@ -108,6 +120,17 @@ mod tests {
     #[test]
     fn bundled_catalog_is_valid() {
         super::parse(super::BUNDLED).unwrap();
+    }
+
+    #[test]
+    fn store_titles_need_no_repo_but_an_https_link() {
+        let ok = r#"{"titles":[{"id":"x","name":"x","store_url":"https://store.steampowered.com/app/1/"}]}"#;
+        let c = super::parse(ok).unwrap();
+        assert!(c.titles[0].build().is_none() && c.titles[0].store_url.is_some());
+        let bad = r#"{"titles":[{"id":"x","name":"x","store_url":"javascript:alert(1)"}]}"#;
+        assert!(super::parse(bad).is_err());
+        let bundled = super::parse(super::BUNDLED).unwrap();
+        assert!(bundled.titles.iter().any(|t| t.id == "ponyside" && t.store_url.is_some()));
     }
 
     #[test]

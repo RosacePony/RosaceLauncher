@@ -38,6 +38,7 @@ struct TitleView {
     description: String,
     repo: String,
     cover: Option<String>,
+    store_url: Option<String>,
     supported: bool,
     installed: Option<state::Installed>,
 }
@@ -59,13 +60,14 @@ async fn list_titles(launcher: State<'_, Launcher>) -> Result<Vec<TitleView>, St
         .titles
         .into_iter()
         .map(|t| TitleView {
-            supported: t.build().is_some(),
+            supported: t.build().is_some() || t.store_url.is_some(),
             installed: installed.get(&t.id).cloned(),
             id: t.id,
             name: t.name,
             description: t.description,
             repo: t.repo,
             cover: t.cover,
+            store_url: t.store_url,
         })
         .collect())
 }
@@ -133,6 +135,21 @@ fn open_install_folder(launcher: State<'_, Launcher>, id: String) -> Result<(), 
     std::process::Command::new(opener).arg(dir).spawn().map(|_| ()).map_err(|e| e.to_string())
 }
 
+/// Support link shown in the sidebar.
+const KOFI_URL: &str = "https://ko-fi.com/rosacepony";
+
+/// Opens a link in the default browser: only the Ko-fi page or a catalog title's store page.
+#[tauri::command]
+async fn open_link(launcher: State<'_, Launcher>, url: String) -> Result<(), String> {
+    let allowed = url == KOFI_URL
+        || catalog::load(&launcher.client).await?.titles.iter().any(|t| t.store_url.as_deref() == Some(url.as_str()));
+    if !allowed {
+        return Err("This link is not allowed".into());
+    }
+    let opener = if cfg!(windows) { "explorer" } else { "xdg-open" };
+    std::process::Command::new(opener).arg(&url).spawn().map(|_| ()).map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -154,7 +171,8 @@ pub fn run() {
             install_title,
             uninstall_title,
             launch_title,
-            open_install_folder
+            open_install_folder,
+            open_link
         ])
         .run(tauri::generate_context!())
         .expect("error while running Rosace's Logic launcher");

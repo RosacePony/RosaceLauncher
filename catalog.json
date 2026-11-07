@@ -3,30 +3,22 @@
     {
       "id": "claws-and-magic",
       "name": "Claws & Magic",
-      "description": "Third-person anthro fantasy melee: swords, bows and magic. Training, Horde co-op and online duels.",
+      "description": "Third-person anthro fantasy melee: swords, bows, guns and magic. Eight heroes, Horde co-op with a Cerberus boss every 10 waves, three maps and online duels.",
       "repo": "RosacePony/ClawsAndMagic",
       "platforms": {
         "windows": {
           "asset": "(?i)windows.*\\.zip$",
           "executable": "claws_and_magic.exe"
         }
-      }
+      },
+      "cover": "covers/claws-and-magic.jpg"
     },
     {
       "id": "ponyside",
       "name": "PonySide",
-      "description": "A multiplayer pony adventure.",
-      "repo": "RosacePony/PonySide2025",
-      "platforms": {
-        "windows": {
-          "asset": "(?i)windows.*\\.zip$",
-          "executable": "PonySide.exe"
-        },
-        "linux": {
-          "asset": "(?i)linux.*\\.(zip|tar\\.gz)$",
-          "executable": "PonySide.x86_64"
-        }
-      }
+      "description": "PonySide is a 2D top-down fantasy RPG built for cooperative multiplayer adventure. Create your own unique character, team up with friends, and explore a world filled with danger, mystery, and opportunity. Free to play on Steam.",
+      "store_url": "https://store.steampowered.com/app/4157160/PonySide/",
+      "cover": "covers/ponyside.jpg"
     }
   ]
 }

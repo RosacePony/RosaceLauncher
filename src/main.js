@@ -10,6 +10,7 @@ const mb = (n) => (n / 1048576).toFixed(1) + " MB";
 
 function status(t) {
   const rel = state.releases[t.id];
+  if (t.store_url) return "store";
   if (state.progress[t.id]) return "busy";
   if (!t.supported) return "unsupported";
   if (!t.installed) return rel && !rel.error ? "available" : "unavailable";
@@ -21,7 +22,7 @@ function renderList() {
   $("list").innerHTML = state.titles.map((t) => {
     const s = status(t);
     const badge = { update: '<span class="badge update">Update</span>', installed: '<span class="badge installed">Installed</span>',
-      busy: '<span class="badge">…</span>' }[s] || "";
+      busy: '<span class="badge">…</span>', store: '<span class="badge">Steam</span>' }[s] || "";
     return `<button class="item ${t.id === state.selected ? "active" : ""}" data-id="${esc(t.id)}">${esc(t.name)}${badge}</button>`;
   }).join("") || '<p class="muted">No titles in catalog.</p>';
   document.querySelectorAll(".item").forEach((b) => (b.onclick = () => { state.selected = b.dataset.id; render(); }));
@@ -32,7 +33,9 @@ function renderDetail() {
   if (!t) { $("detail").innerHTML = '<p class="muted">Select a title.</p>'; return; }
   const s = status(t), rel = state.releases[t.id], p = state.progress[t.id], err = state.errors[t.id];
   let actions = "";
-  if (s === "busy") {
+  if (s === "store") {
+    actions = `<button class="primary" data-act="store">View on Steam</button><span class="meta">Available on Steam</span>`;
+  } else if (s === "busy") {
     const pct = p.total ? Math.round((p.downloaded / p.total) * 100) : 0;
     const label = p.stage === "extract" ? "Installing…" : `Downloading ${mb(p.downloaded)} / ${mb(p.total)} (${pct}%)`;
     actions = `<div style="flex:1"><div class="progress"><div style="width:${p.stage === "extract" ? 100 : pct}%"></div></div><span class="meta">${label}</span></div>`;
@@ -77,6 +80,8 @@ async function act(t, action) {
         t.installed = await invoke("install_title", { id: t.id });
       }
       await invoke("launch_title", { id: t.id });
+    } else if (action === "store") {
+      await invoke("open_link", { url: t.store_url });
     } else if (action === "folder") {
       await invoke("open_install_folder", { id: t.id });
     } else if (action === "uninstall") {
@@ -102,7 +107,7 @@ async function load() {
   if (!state.titles.some((t) => t.id === state.selected)) state.selected = state.titles[0]?.id ?? null;
   state.releases = {};
   render();
-  await Promise.all(state.titles.filter((t) => t.supported).map(async (t) => {
+  await Promise.all(state.titles.filter((t) => t.supported && !t.store_url).map(async (t) => {
     try { state.releases[t.id] = await invoke("latest_release", { id: t.id }); }
     catch (e) { state.releases[t.id] = { error: String(e) }; }
     render();
@@ -119,6 +124,7 @@ listen("install-progress", (ev) => {
   renderList();
 });
 $("refresh").onclick = load;
+$("kofi").onclick = () => invoke("open_link", { url: "https://ko-fi.com/rosacepony" }).catch(() => {});
 $("auto-update").checked = autoUpdate();
 $("auto-update").onchange = (e) => localStorage.setItem("autoUpdate", e.target.checked ? "on" : "off");
 // Check for new releases every 30 minutes while the launcher stays open.
