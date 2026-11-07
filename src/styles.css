@@ -64,3 +64,4 @@ input[type="checkbox"] { accent-color: #fff; }
   padding: 8px 10px 8px 16px; background: #fff; color: #000; border-radius: 8px; box-shadow: 0 6px 24px #000a; }
 .launcher-update[hidden] { display: none; }
 button.primary.small { font-size: 13px; padding: 6px 14px; background: #000; color: #fff; }
+.version { display: block; text-align: center; font-size: 11px; color: var(--muted); padding-top: 4px; }

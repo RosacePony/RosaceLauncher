@@ -147,5 +147,6 @@ async function checkLauncherUpdate() {
     };
   } catch (_) { /* offline or no release yet */ }
 }
+window.__TAURI__.app.getVersion().then((v) => ($("launcher-version").textContent = `Rosace Launcher v${v}`)).catch(() => {});
 checkLauncherUpdate();
 setInterval(checkLauncherUpdate, 30 * 60 * 1000);
