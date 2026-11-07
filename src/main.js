@@ -18,12 +18,19 @@ function status(t) {
   return "installed";
 }
 
+// Sidebar sections, in display order. A catalog title's `category` picks its section.
+const CATEGORIES = [["game", "Games"], ["software", "Software"]];
+
 function renderList() {
-  $("list").innerHTML = state.titles.map((t) => {
+  const item = (t) => {
     const s = status(t);
     const badge = { update: '<span class="badge update">Update</span>', installed: '<span class="badge installed">Installed</span>',
       busy: '<span class="badge">…</span>', store: '<span class="badge">Steam</span>' }[s] || "";
     return `<button class="item ${t.id === state.selected ? "active" : ""}" data-id="${esc(t.id)}">${esc(t.name)}${badge}</button>`;
+  };
+  $("list").innerHTML = CATEGORIES.map(([cat, label]) => {
+    const group = state.titles.filter((t) => (t.category || "game") === cat);
+    return group.length ? `<div class="cat">${label}</div>` + group.map(item).join("") : "";
   }).join("") || '<p class="muted">No titles in catalog.</p>';
   document.querySelectorAll(".item").forEach((b) => (b.onclick = () => { state.selected = b.dataset.id; render(); }));
 }
@@ -40,7 +47,7 @@ function renderDetail() {
     const label = p.stage === "extract" ? "Installing…" : `Downloading ${mb(p.downloaded)} / ${mb(p.total)} (${pct}%)`;
     actions = `<div style="flex:1"><div class="progress"><div style="width:${p.stage === "extract" ? 100 : pct}%"></div></div><span class="meta">${label}</span></div>`;
   } else if (s === "installed" || s === "update") {
-    actions = `<button class="primary" data-act="launch">Play</button>` +
+    actions = `<button class="primary" data-act="launch">${t.category === "software" ? "Open" : "Play"}</button>` +
       (s === "update" ? `<button class="secondary" data-act="install">Update to ${esc(rel.tag)}</button>` : "") +
       `<button class="secondary" data-act="folder">Open folder</button><button class="ghost" data-act="uninstall">Uninstall</button>`;
   } else if (s === "available") {

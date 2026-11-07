@@ -39,6 +39,7 @@ struct TitleView {
     repo: String,
     cover: Option<String>,
     store_url: Option<String>,
+    category: String,
     supported: bool,
     installed: Option<state::Installed>,
 }
@@ -68,6 +69,7 @@ async fn list_titles(launcher: State<'_, Launcher>) -> Result<Vec<TitleView>, St
             repo: t.repo,
             cover: t.cover,
             store_url: t.store_url,
+            category: t.category,
         })
         .collect())
 }
@@ -119,12 +121,43 @@ async fn launch_title(launcher: State<'_, Launcher>, id: String) -> Result<(), S
     let build = title.build().ok_or("Not available on this platform")?;
     let dir = launcher.data_dir.join("games").join(&id);
     let exe = dir.join(&build.executable);
+    if title.elevate && cfg!(windows) {
+        return launch_elevated(&exe, &build.args, &dir);
+    }
     std::process::Command::new(&exe)
         .args(&build.args)
         .current_dir(&dir)
         .spawn()
         .map_err(|e| format!("Could not start {}: {e}", exe.display()))?;
     Ok(())
+}
+
+/// Starts a program with administrator rights (Windows UAC prompt) without keeping a console around.
+fn launch_elevated(exe: &std::path::Path, args: &[String], dir: &std::path::Path) -> Result<(), String> {
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        let q = |s: &str| format!("'{}'", s.replace('\'', "''"));
+        let mut script = format!("Start-Process -FilePath {} -WorkingDirectory {} -Verb RunAs", q(&exe.display().to_string()), q(&dir.display().to_string()));
+        if !args.is_empty() {
+            script += &format!(" -ArgumentList {}", args.iter().map(|a| q(a)).collect::<Vec<_>>().join(","));
+        }
+        let status = std::process::Command::new("powershell")
+            .args(["-NoProfile", "-WindowStyle", "Hidden", "-Command", &script])
+            .creation_flags(0x0800_0000)
+            .status()
+            .map_err(|e| format!("Could not start {}: {e}", exe.display()))?;
+        if status.success() {
+            Ok(())
+        } else {
+            Err("Administrator permission was declined (or the program could not start).".into())
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = (exe, args, dir);
+        Err("Elevation is only used on Windows".into())
+    }
 }
 
 #[tauri::command]

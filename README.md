@@ -12,6 +12,13 @@ Installed games update themselves (on start, every 30 minutes and before Play).
 
 Like my games? [Fund my projects on Ko-fi](https://ko-fi.com/rosacepony).
 
+## Categories
+
+The sidebar groups titles into **Games** and **Software**. Set `"category": "game"` (default) or
+`"software"` on a catalog entry. A title can also set `"elevate": true` to be started with
+administrator rights on Windows (UAC prompt), e.g. network tools like
+[RosaceLan](https://github.com/RosacePony/RosaceLan).
+
 ## Adding a title
 
 Edit `catalog.json`:

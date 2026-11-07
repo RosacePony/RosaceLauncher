@@ -65,3 +65,5 @@ input[type="checkbox"] { accent-color: #fff; }
 .launcher-update[hidden] { display: none; }
 button.primary.small { font-size: 13px; padding: 6px 14px; background: #000; color: #fff; }
 .version { display: block; text-align: center; font-size: 11px; color: var(--muted); padding-top: 4px; }
+.cat { padding: 14px 12px 4px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.cat:first-child { padding-top: 4px; }

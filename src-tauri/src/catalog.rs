@@ -40,6 +40,18 @@ pub struct Title {
     pub store_url: Option<String>,
     #[serde(default)]
     pub platforms: HashMap<String, PlatformBuild>,
+    /// Sidebar section: "game" (default) or "software".
+    #[serde(default = "default_category")]
+    pub category: String,
+    /// Windows: start the program with administrator rights (UAC prompt), e.g. network tools.
+    #[serde(default)]
+    pub elevate: bool,
+}
+
+pub const CATEGORIES: [&str; 2] = ["game", "software"];
+
+fn default_category() -> String {
+    "game".into()
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -65,6 +77,9 @@ pub fn parse(text: &str) -> Result<Catalog, String> {
             && t.id.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-' || c == '_');
         if !ok {
             return Err(format!("Invalid title id '{}': use a-z, 0-9, '-' or '_'", t.id));
+        }
+        if !CATEGORIES.contains(&t.category.as_str()) {
+            return Err(format!("Invalid category '{}' for '{}': use {}", t.category, t.id, CATEGORIES.join(" or ")));
         }
         if let Some(url) = &t.store_url {
             if !url.starts_with("https://") {
@@ -131,6 +146,25 @@ mod tests {
         assert!(super::parse(bad).is_err());
         let bundled = super::parse(super::BUNDLED).unwrap();
         assert!(bundled.titles.iter().any(|t| t.id == "ponyside" && t.store_url.is_some()));
+    }
+
+    #[test]
+    fn categories_default_to_game_and_are_validated() {
+        let c = super::parse(r#"{"titles":[{"id":"a","name":"a","repo":"o/r"},{"id":"b","name":"b","repo":"o/r","category":"software","elevate":true}]}"#).unwrap();
+        assert_eq!(c.titles[0].category, "game");
+        assert!(!c.titles[0].elevate);
+        assert_eq!(c.titles[1].category, "software");
+        assert!(c.titles[1].elevate);
+        assert!(super::parse(r#"{"titles":[{"id":"a","name":"a","repo":"o/r","category":"music"}]}"#).is_err());
+    }
+
+    #[test]
+    fn bundled_catalog_lists_rosacelan_as_elevated_software() {
+        let c = super::parse(super::BUNDLED).unwrap();
+        let t = c.titles.iter().find(|t| t.id == "rosacelan").expect("rosacelan entry");
+        assert_eq!(t.category, "software");
+        assert!(t.elevate);
+        assert!(c.titles.iter().filter(|t| t.category == "game").count() >= 2);
     }
 
     #[test]

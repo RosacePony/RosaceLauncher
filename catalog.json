@@ -19,6 +19,20 @@
       "description": "PonySide is a 2D top-down fantasy RPG built for cooperative multiplayer adventure. Create your own unique character, team up with friends, and explore a world filled with danger, mystery, and opportunity. Free to play on Steam.",
       "store_url": "https://store.steampowered.com/app/4157160/PonySide/",
       "cover": "covers/ponyside.jpg"
+    },
+    {
+      "id": "rosacelan",
+      "name": "RosaceLan",
+      "category": "software",
+      "elevate": true,
+      "description": "Play any LAN-capable game online with friends, Tunngle style. Browse or create lobbies, see who hosts, and play over a virtual LAN. Fully peer to peer: no account, no friend list, no telemetry. The lobby list lives on a small server you choose; game traffic never goes through it. Needs administrator rights (it creates a virtual network adapter).",
+      "repo": "RosacePony/RosaceLan",
+      "platforms": {
+        "windows": {
+          "asset": "(?i)windows.*\\.zip$",
+          "executable": "rosacelan.exe"
+        }
+      }
     }
   ]
 }
