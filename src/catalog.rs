@@ -8,7 +8,7 @@ use std::collections::HashMap;
 /// without shipping a new launcher. `None` = use the catalog bundled at build time.
 pub const REMOTE_CATALOG_URL: Option<&str> = Some("https://raw.githubusercontent.com/RosacePony/RosaceLauncher/main/catalog.json");
 
-const BUNDLED: &str = include_str!("../../catalog.json");
+const BUNDLED: &str = include_str!("../catalog.json");
 
 pub const PLATFORM: &str = if cfg!(windows) {
     "windows"

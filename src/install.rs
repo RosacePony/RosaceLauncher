@@ -309,7 +309,7 @@ mod tests {
     #[tokio::test]
     #[ignore]
     async fn installs_claws_and_magic_from_catalog() {
-        let catalog = crate::catalog::parse(include_str!("../../catalog.json")).unwrap();
+        let catalog = crate::catalog::parse(include_str!("../catalog.json")).unwrap();
         let title = catalog.titles.iter().find(|t| t.id == "claws-and-magic").expect("catalog entry");
         let dir = std::env::temp_dir().join("rosace-launcher-test-cm");
         let _ = fs::remove_dir_all(&dir);

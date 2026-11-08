@@ -1,7 +1,7 @@
 # Rosace Launcher
 
 Desktop launcher (Windows + Linux) for Rosace's games and apps.
-Rust + Tauri v2 backend, plain HTML/JS UI. Installs, updates, launches and uninstalls
+Pure Rust with the [Iced](https://iced.rs) GUI (native, no webview). Installs, updates, launches and uninstalls
 titles from their **GitHub Releases**, and links to store pages (Steam) for the others.
 
 ## Download
@@ -29,7 +29,7 @@ Edit `catalog.json`:
   "name": "PonySide",
   "description": "…",
   "repo": "RosacePony/PonySide2025",      // GitHub owner/repo (must be public)
-  "cover": "covers/ponyside.jpg",         // optional banner: file in src/covers/ or an https URL
+  "cover": "covers/ponyside.jpg",         // optional banner: file in assets/covers/ or an https URL
   "store_url": "https://store.steampowered.com/app/…", // optional: link to a store instead of installing (no repo/platforms needed)
   "platforms": {
     "windows": { "asset": "(?i)windows.*\\.zip$", "executable": "PonySide.exe" },
@@ -49,7 +49,7 @@ Create a GitHub Release (e.g. tag `v0.3.0`) on the game's repo and attach e.g.
 
 ### Catalog without rebuilding the launcher
 Launchers read `catalog.json` from this repo's `main` branch (`REMOTE_CATALOG_URL` in
-`src-tauri/src/catalog.rs`), falling back to the copy bundled at build time. Pushing a
+`src/catalog.rs`), falling back to the copy bundled at build time. Pushing a
 catalog change reaches every installed launcher; new cover images need a launcher release
 (or an https URL). For testing, the env var `ROSACE_CATALOG`
 (URL or file path) overrides everything.
@@ -82,14 +82,12 @@ pushes and creates the GitHub release. Installed launchers show **Update & resta
 
 ## Develop / build
 ```
-npm install
-npm run dev          # run with hot reload of the UI
-npm run build        # Windows: NSIS installer in src-tauri/target/release/bundle/nsis
-cd src-tauri && cargo test -- --include-ignored   # includes a real GitHub install test
+cargo run                      # debug build
+cargo test -- --include-ignored   # includes a real GitHub install test
+python tools/release.py --version X.Y.Z --notes "..."   # test, build, NSIS installer, sign, GitHub release
 ```
-Linux build (on a Linux machine): install the Tauri prerequisites
-(`libwebkit2gtk-4.1-dev build-essential libssl-dev libayatana-appindicator3-dev librsvg2-dev`),
-then `npm run build` → `.AppImage` and `.deb`.
+Linux: `cargo build --release` (needs the usual Wayland/X11 + Vulkan/OpenGL libraries); no installer or
+self-update is published for Linux yet.
 
 ## Limits (v1)
 - Public repos only (private releases need a token).

@@ -1,12 +1,15 @@
-"""Publish a Rosace Launcher release: signed installer + latest.json for the self-updater.
+"""Publish a Rosace Launcher release: signed NSIS installer + latest.json for the self-updater.
 
-usage: python tools/release.py --version 0.4.0 --notes "What changed"   [--dry-run]
+usage: python tools/release.py --version 0.5.0 --notes "What changed"   [--dry-run]
 
-Steps: bump the version (package.json, Cargo.toml, tauri.conf.json) -> cargo test ->
-`npm run build` signed with the updater key (~/.tauri/rosace-launcher.key, never in git) ->
-latest.json -> git commit + tag + push -> GitHub release with the installer and latest.json.
-Installed launchers read releases/latest/download/latest.json, verify the signature with the
-public key built into them, and offer "Update & restart".
+Steps: bump the version (Cargo.toml) -> cargo test -> cargo build --release -> makensis installer ->
+minisign signature with the updater key (~/.tauri/rosace-launcher.key, never in git) -> latest.json ->
+git commit + tag + push -> GitHub release with the installer and latest.json.
+Installed launchers read releases/latest/download/latest.json, verify the signature with the public
+key built into them (src/updater.rs) and offer "Update & restart".
+
+Needs: Rust, GitHub CLI (gh), NSIS (makensis; the copy Tauri downloaded in %LOCALAPPDATA%/tauri/NSIS
+works) and Node only for `npx @tauri-apps/cli signer sign` (it writes the minisign signature).
 """
 import argparse
 import datetime as dt
@@ -21,7 +24,8 @@ ROOT = Path(__file__).resolve().parent.parent
 REPO = "RosacePony/RosaceLauncher"
 KEY = Path.home() / ".tauri" / "rosace-launcher.key"
 GH = shutil.which("gh") or r"C:\Program Files\GitHub CLI\gh.exe"
-NPM = shutil.which("npm") or "npm"
+NPX = shutil.which("npx") or "npx"
+MAKENSIS = shutil.which("makensis") or str(Path(os.environ.get("LOCALAPPDATA", "")) / "tauri" / "NSIS" / "makensis.exe")
 
 
 def run(cmd, **kw):
@@ -30,16 +34,11 @@ def run(cmd, **kw):
 
 
 def bump(version):
-    for rel, pat in [
-        ("package.json", r'("version":\s*")[^"]+(")'),
-        ("src-tauri/tauri.conf.json", r'("version":\s*")[^"]+(")'),
-        ("src-tauri/Cargo.toml", r'(?m)^(version\s*=\s*")[^"]+(")'),
-    ]:
-        p = ROOT / rel
-        s = p.read_text(encoding="utf-8")
-        s2, n = re.subn(pat, rf"\g<1>{version}\g<2>", s, count=1)
-        assert n == 1, f"no version in {rel}"
-        p.write_text(s2, encoding="utf-8")
+    p = ROOT / "Cargo.toml"
+    s = p.read_text(encoding="utf-8")
+    s2, n = re.subn(r'(?m)^(version\s*=\s*")[^"]+(")', rf"\g<1>{version}\g<2>", s, count=1)
+    assert n == 1, "no version in Cargo.toml"
+    p.write_text(s2, encoding="utf-8")
 
 
 def main():
@@ -54,19 +53,21 @@ def main():
         raise SystemExit(f"tag {tag} already exists")
     if not KEY.is_file():
         raise SystemExit(f"missing signing key {KEY}")
+    if not Path(MAKENSIS).is_file():
+        raise SystemExit(f"makensis not found ({MAKENSIS})")
     bump(v)
-    run(["cargo", "test"], cwd=ROOT / "src-tauri")
-    env = dict(os.environ, TAURI_SIGNING_PRIVATE_KEY=KEY.read_text().strip(), TAURI_SIGNING_PRIVATE_KEY_PASSWORD="")
-    run([NPM, "run", "build"], cwd=ROOT, env=env, shell=os.name == "nt")
-    nsis = ROOT / "src-tauri/target/release/bundle/nsis"
-    setup = nsis / f"Rosace Launcher_{v}_x64-setup.exe"
-    sig = setup.with_name(setup.name + ".sig")
-    assert setup.is_file() and sig.is_file(), f"missing {setup} or its .sig"
-    out = ROOT / "src-tauri/target/upload"
+    run(["cargo", "test"], cwd=ROOT)
+    run(["cargo", "build", "--release"], cwd=ROOT)
+    out = ROOT / "target/upload"
     shutil.rmtree(out, ignore_errors=True)
     out.mkdir(parents=True)
-    asset = out / f"Rosace.Launcher_{v}_x64-setup.exe"  # GitHub turns spaces into dots anyway
-    shutil.copy2(setup, asset)
+    asset = out / f"Rosace.Launcher_{v}_x64-setup.exe"
+    run([MAKENSIS, "/V2", f"/DVERSION={v}", f"/DBIN={ROOT / 'target/release/rosace-launcher.exe'}",
+         f"/DICON={ROOT / 'assets/icon.ico'}", f"/DOUT={asset}", str(ROOT / "installer/installer.nsi")])
+    env = dict(os.environ, TAURI_SIGNING_PRIVATE_KEY_PASSWORD="")
+    run([NPX, "--yes", "@tauri-apps/cli", "signer", "sign", "-f", str(KEY), "-p", "", str(asset)], cwd=ROOT, env=env, shell=os.name == "nt")
+    sig = asset.with_name(asset.name + ".sig")
+    assert asset.is_file() and sig.is_file(), f"missing {asset} or its .sig"
     latest = {
         "version": v,
         "notes": a.notes,
