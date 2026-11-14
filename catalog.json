@@ -4,7 +4,7 @@
       "id": "claws-and-magic",
       "name": "Claws & Magic",
       "description": "Third-person anthro fantasy melee: swords, bows, guns and magic. Eight heroes, Horde co-op with a Cerberus boss every 10 waves, three maps and online duels.",
-      "repo": "RosacePony/ClawsAndMagic",
+      "repo": "RosacePony/ClawsAndMagic-builds",
       "platforms": {
         "windows": {
           "asset": "(?i)windows.*\\.zip$",

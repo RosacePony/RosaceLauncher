@@ -303,6 +303,33 @@ mod tests {
         let _ = fs::remove_dir_all(&dir);
     }
 
+    /// The catalog points Claws & Magic at the PUBLIC binaries-only repo (the source repo is private)
+    /// and keeps its id, so existing installs in games/claws-and-magic update in place.
+    #[test]
+    fn claws_and_magic_installs_from_public_builds_repo() {
+        let catalog = crate::catalog::parse(include_str!("../catalog.json")).unwrap();
+        let title = catalog.titles.iter().find(|t| t.id == "claws-and-magic").expect("catalog entry");
+        assert_eq!(title.repo, "RosacePony/ClawsAndMagic-builds");
+        let re = regex::Regex::new(&title.build().unwrap().asset).unwrap();
+        assert!(re.is_match("ClawsAndMagic-windows-v0.4.1.zip"));
+    }
+
+    /// Real network test (light): resolves the latest Claws & Magic release asset from the builds
+    /// repo and checks the download URL answers. Run with: cargo test resolves_claws -- --ignored --nocapture
+    #[tokio::test]
+    #[ignore]
+    async fn resolves_claws_and_magic_latest_asset() {
+        let catalog = crate::catalog::parse(include_str!("../catalog.json")).unwrap();
+        let title = catalog.titles.iter().find(|t| t.id == "claws-and-magic").expect("catalog entry");
+        let c = client();
+        let info = latest_release(&c, title).await.unwrap();
+        assert!(info.tag.starts_with('v') && info.size > 1_000_000 && info.sha256.is_some(), "{info:?}");
+        assert!(info.download_url.starts_with("https://github.com/RosacePony/ClawsAndMagic-builds/releases/download/"), "{}", info.download_url);
+        let resp = c.head(&info.download_url).send().await.unwrap();
+        assert!(resp.status().is_success(), "HEAD {} -> {}", info.download_url, resp.status());
+        println!("{} {} ({} bytes) -> {}", info.tag, info.asset_name, info.size, info.download_url);
+    }
+
     /// Real network test: installs Claws & Magic from the bundled catalog (latest GitHub release,
     /// ~230 MB) and checks the installed game answers `--version`.
     /// Run with: cargo test installs_claws -- --ignored --nocapture
