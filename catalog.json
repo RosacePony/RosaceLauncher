@@ -14,6 +14,19 @@
       "cover": "covers/claws-and-magic.jpg"
     },
     {
+      "id": "popenrush",
+      "name": "PopenRush",
+      "description": "Pony combat racing in the spirit of Jak X: run laps, grab health, attack and defense pickups, and fill your Surge meter with kills to power up. Play as a Unicorn, Earth Pony, Pegasus or Bat Pony on three tracks against bots.",
+      "repo": "RosacePony/PopenRush-builds",
+      "platforms": {
+        "windows": {
+          "asset": "(?i)windows.*\\.zip$",
+          "executable": "popenrush.exe"
+        }
+      },
+      "cover": "https://raw.githubusercontent.com/RosacePony/PopenRush-builds/main/cover.jpg"
+    },
+    {
       "id": "ponyside",
       "name": "PonySide",
       "description": "PonySide is a 2D top-down fantasy RPG built for cooperative multiplayer adventure. Create your own unique character, team up with friends, and explore a world filled with danger, mystery, and opportunity. Free to play on Steam.",
