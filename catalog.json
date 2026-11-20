@@ -16,7 +16,7 @@
     {
       "id": "popenrush",
       "name": "PopenRush",
-      "description": "Pony combat racing in the spirit of Jak X: run laps, grab health, attack and defense pickups, and fill your Surge meter with kills to power up. Play as a Unicorn, Earth Pony, Pegasus or Bat Pony on three tracks against bots.",
+      "description": "Pony combat racing in the spirit of Jak X: run laps, grab health, attack and defense pickups, and fill your Surge meter with kills to power up. Play as a Unicorn, Earth Pony, Pegasus or Bat Pony on three tracks against bots or online with friends (host, public list or join by IP).",
       "repo": "RosacePony/PopenRush-builds",
       "platforms": {
         "windows": {
