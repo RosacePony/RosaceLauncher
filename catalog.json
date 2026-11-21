@@ -11,7 +11,7 @@
           "executable": "claws_and_magic.exe"
         }
       },
-      "cover": "covers/claws-and-magic.jpg"
+      "cover": "https://raw.githubusercontent.com/RosacePony/ClawsAndMagic-builds/main/cover.jpg"
     },
     {
       "id": "popenrush",
