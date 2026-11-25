@@ -46,6 +46,20 @@
           "executable": "rosacelan.exe"
         }
       }
+    },
+    {
+      "id": "rosace-studio",
+      "name": "Rosace Studio",
+      "category": "software",
+      "elevate": false,
+      "description": "Initial development preview: import and mix WAV tracks with transport, waveforms, gain, pan and mute; save projects and export stereo WAV. No recording, MIDI, plugins or clip editing yet. Save before closing; projects reference external audio files.",
+      "repo": "RosacePony/RosaceStudio-builds",
+      "platforms": {
+        "windows": {
+          "asset": "(?i)^RosaceStudio-windows-x64-v[0-9]+\\.[0-9]+\\.[0-9]+\\.zip$",
+          "executable": "studio-app.exe"
+        }
+      }
     }
   ]
 }

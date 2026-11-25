@@ -168,6 +168,27 @@ mod tests {
     }
 
     #[test]
+    fn bundled_catalog_places_studio_after_rosacelan_with_windows_build() {
+        let c = super::parse(super::BUNDLED).unwrap();
+        let lan = c.titles.iter().position(|t| t.id == "rosacelan").expect("rosacelan entry");
+        assert_eq!(c.titles.iter().filter(|t| t.id == "rosace-studio").count(), 1);
+        let studio = &c.titles[lan + 1];
+        assert_eq!(studio.id, "rosace-studio");
+        assert_eq!(studio.name, "Rosace Studio");
+        assert_eq!(studio.category, "software");
+        assert!(!studio.elevate);
+        assert_eq!(studio.repo, "RosacePony/RosaceStudio-builds");
+        assert!(studio.store_url.is_none());
+        let windows = studio.platforms.get("windows").expect("Windows build");
+        assert_eq!(windows.executable, "studio-app.exe");
+        assert!(windows.args.is_empty());
+        let asset = regex::Regex::new(&windows.asset).unwrap();
+        assert!(asset.is_match("RosaceStudio-windows-x64-v0.1.0.zip"));
+        assert!(!asset.is_match("RosaceStudio-linux-x64-v0.1.0.zip"));
+        assert!(!asset.is_match("RosaceStudio-windows-x64-v0.1.0.zip.sha256"));
+    }
+
+    #[test]
     fn rejects_unsafe_ids() {
         let bad = r#"{"titles":[{"id":"../x","name":"x","repo":"a/b","platforms":{}}]}"#;
         assert!(super::parse(bad).is_err());
